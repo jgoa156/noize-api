@@ -1,0 +1,361 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "Documentação da API",
+      "version": "1.0.0"
+    },
+    "host": "localhost:3020",
+    "basePath": "/",
+    "schemes": [
+      "https",
+      "http"
+    ],
+    "securityDefinitions": {
+      "bearerAuth": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header"
+      }
+    },
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "paths": {
+      "/rides/{id}": {
+        "get": {
+          "summary": "Get a specific ride by id",
+          "operationId": "getRideById",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "The ride with the specified id",
+              "headers": {
+                    "Access-Control-Allow-Origin": {
+                        "type": "string"
+                    }
+                }
+            }
+          }
+        },
+        "delete": {
+          "summary": "Delete a specific ride by id",
+          "operationId": "removeRide",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "The ride has been deleted successfully"
+            }
+          }
+        }
+      },
+      "/rides/{driverRideId}/add/{passengerRideId}": {
+        "post": {
+          "summary": "Add a passenger to a ride",
+          "operationId": "addSubRide",
+          "parameters": [
+            {
+              "name": "driverRideId",
+              "in": "path",
+              "required": true,
+              "type": "integer"
+            },
+            {
+              "name": "passengerRideId",
+              "in": "path",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "The passenger has been added successfully"
+            }
+          }
+        }
+      },
+      "/vehicles/": {
+        "get": {
+          "description": "Lista todos os veículos",
+          "responses": {
+            "200": {
+              "description": "Lista de veículos",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Vehicle"
+                }
+              }
+            }
+          }
+        }
+      },
+      "/vehicles/{id}": {
+        "get": {
+          "description": "Exibe informações de um veículo específico",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID do veículo",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Informações do veículo",
+              "schema": {
+                "$ref": "#/definitions/Vehicle"
+              }
+            }
+          }
+        },
+        "delete": {
+          "description": "Remove um veículo",
+          "security": [
+            {
+              "Authorization": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID do veículo",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Veículo removido com sucesso"
+            }
+          }
+        }
+      },
+      "/users/": {
+        "get": {
+          "summary": "List all users",
+          "responses": {
+            "200": {
+              "description": "Success",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/User"
+                }
+              }
+            }
+          }
+        }
+      },
+      "/users/{id}": {
+        "get": {
+          "summary": "Get user by ID",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID of the user",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "schema": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          }
+        }
+      },
+      "/users/{userId}/vehicles": {
+        "get": {
+          "summary": "List all vehicles of a user",
+          "parameters": [
+            {
+              "name": "userId",
+              "in": "path",
+              "description": "ID of the user",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Vehicle"
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "summary": "Add a new vehicle for a user",
+          "description": "Add a new vehicle to the list of vehicles owned by a user.",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "description": "The ID of the user to which the vehicle belongs",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "vehicle",
+              "description": "The vehicle information to be added",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/Vehicle"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful operation",
+              "schema": {
+                "$ref": "#/definitions/Vehicle"
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ]
+        }
+      },
+      "/users/{userId}/vehicles/{id}": {
+        "get": {
+          "summary": "Get vehicle by ID",
+          "parameters": [
+            {
+              "name": "userId",
+              "in": "path",
+              "description": "ID of the user",
+              "required": true,
+              "type": "integer"
+            },
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID of the vehicle",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "schema": {
+                "$ref": "#/definitions/Vehicle"
+              }
+            }
+          }
+        },
+        "post": {
+          "summary": "Update a user's vehicle",
+          "description": "Update the information of a vehicle owned by a user.",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "description": "The ID of the user to which the vehicle belongs",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "description": "The ID of the vehicle to be updated",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "vehicle",
+              "description": "The updated vehicle information",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/Vehicle"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful operation",
+              "schema": {
+                "$ref": "#/definitions/Vehicle"
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ]
+        }
+      },
+      "/{userId}/rides": {
+        "get": {
+          "summary": "List all rides of a user",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID of the user",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "schema": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          }
+        }
+      }
+    }
+}
+  

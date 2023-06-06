@@ -1,0 +1,33 @@
+{
+	"name": "noize-api",
+	"version": "1.0.0",
+	"description": "",
+	"main": "src/app.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "nodemon -r esm --legacy-watch src/app.js",
+		"setup": "npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:undo:all && npx sequelize-cli db:seed:all && npm start"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"bcryptjs": "^2.4.3",
+		"cors": "^2.8.5",
+		"dotenv": "^15.0.1",
+		"esm": "^3.2.25",
+		"express": "^4.17.2",
+		"express-formidable": "^1.2.0",
+		"fs": "^0.0.1-security",
+		"jsonwebtoken": "^8.5.1",
+		"moment": "^2.29.4",
+		"morgan": "^1.10.0",
+		"mysql2": "^2.3.3",
+		"node-cron": "^3.0.2",
+		"nodemailer": "^6.9.1",
+		"nodemon": "^2.0.15",
+		"sequelize": "^6.15.0",
+		"sequelize-cli": "^6.4.1",
+		"sharp": "^0.31.3",
+		"socket.io": "^4.6.0"
+	}
+}
