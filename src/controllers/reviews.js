@@ -1,5 +1,5 @@
 import { handleError } from "../utils";
-import { Reviews, Places, Users } from "../models";
+import { Reviews, Places, Users, Tags, Categories } from "../models";
 import { Op, fn, col } from "sequelize/dist";
 
 async function list(req, res) {
@@ -12,8 +12,19 @@ async function list(req, res) {
 					attributes: {
 						exclude: ["password"],
 						include: [
-							[fn("concat", `${process.env.NODE_HOST}${process.env.PORT ? `:${process.env.PORT}` : ""}/images/`, col("passengers.user.profileImage")), "profileImageUrl"]
-						]
+							[
+								fn(
+									"concat",
+									`${process.env.NODE_HOST}${
+										process.env.PORT
+											? `:${process.env.PORT}`
+											: ""
+									}/images/`,
+									col("passengers.user.profileImage")
+								),
+								"profileImageUrl",
+							],
+						],
 					},
 				},
 				{
@@ -26,12 +37,12 @@ async function list(req, res) {
 					include: [
 						{
 							model: Categories,
-							as: "categories"
-						}
-					]
-				}
+							as: "categories",
+						},
+					],
+				},
 			],
-			order: [["updatedAt", "DESC"]]
+			order: [["updatedAt", "DESC"]],
 		};
 
 		const { id } = req.params;
@@ -42,7 +53,9 @@ async function list(req, res) {
 				return res.send(review);
 			}
 
-			return res.status(404).json({ message: "Avaliação não encontrada" });
+			return res
+				.status(404)
+				.json({ message: "Avaliação não encontrada" });
 		} else {
 			const { limit, offset } = req.query;
 
@@ -61,7 +74,6 @@ async function list(req, res) {
 
 			// Fetching and grouping categories
 			let reviews = Reviews.findAll(options);
-
 
 			return res.send(reviews);
 		}
@@ -82,7 +94,7 @@ async function listByUser(req, res) {
 			include: [
 				{
 					model: Places,
-					as: "place"
+					as: "place",
 				},
 				{
 					model: Tags,
@@ -90,15 +102,15 @@ async function listByUser(req, res) {
 					include: [
 						{
 							model: Categories,
-							as: "categories"
-						}
-					]
-				}
+							as: "categories",
+						},
+					],
+				},
 			],
 			order: [["updatedAt", "DESC"]],
 			where: {
-				userId: userId
-			}
+				userId: userId,
+			},
 		};
 
 		return res.send(await Reviews.findAll(options));
@@ -123,8 +135,19 @@ async function listByPlace(req, res) {
 					attributes: {
 						exclude: ["password"],
 						include: [
-							[fn("concat", `${process.env.NODE_HOST}${process.env.PORT ? `:${process.env.PORT}` : ""}/images/`, col("passengers.user.profileImage")), "profileImageUrl"]
-						]
+							[
+								fn(
+									"concat",
+									`${process.env.NODE_HOST}${
+										process.env.PORT
+											? `:${process.env.PORT}`
+											: ""
+									}/images/`,
+									col("passengers.user.profileImage")
+								),
+								"profileImageUrl",
+							],
+						],
 					},
 				},
 				{
@@ -133,15 +156,15 @@ async function listByPlace(req, res) {
 					include: [
 						{
 							model: Categories,
-							as: "categories"
-						}
-					]
-				}
+							as: "categories",
+						},
+					],
+				},
 			],
 			order: [["updatedAt", "DESC"]],
 			where: {
-				placeId: placeId
-			}
+				placeId: placeId,
+			},
 		};
 
 		return res.send(await Reviews.findAll(options));
@@ -152,26 +175,48 @@ async function listByPlace(req, res) {
 
 async function add(req, res) {
 	try {
-		const { userId, categories } = req.body;
+		const { placeId } = req.params;
+		const userId = req.decodedToken.user;
 
-		if (req.decodedToken.user != userId) {
-			return res.status(403).json({ message: "Acesso negado." });
+		if (!(await Places.findByPk(placeId))) {
+			return res.status(404).json({ message: "Lugar não existe." });
 		}
-		if (!(await Users.findByPk(userId))) {
-			return res.status(404).json({ message: "Usuário não existe." });
+		if (
+			await Reviews.findOne({
+				where: { placeId: placeId, userId: userId },
+			})
+		) {
+			return res.status(400).json({
+				message:
+					"Já existe uma avaliação desse lugar feita por este usuário.",
+			});
 		}
 
-		const reviews = await Reviews.create({ ...req.body, userId: userId });
-		const response = {
+		const review = await Reviews.create({
+			...req.body,
+			placeId: placeId,
+			userId: userId,
+		});
+
+		const { tags } = req.body;
+		for (const [categoryName, _tags] of Object.entries(tags)) {
+			let category = await Categories.findOne({
+				where: { name: categoryName },
+			});
+
+			_tags.forEach(async (tagName, index) => {
+				let [tag] = await Tags.findOrCreate({
+					where: { name: tagName },
+				});
+
+				// Add link between review, category and tag
+			});
+		}
+
+		return res.status(201).json({
 			message: "Avaliação registrada com sucesso.",
-			ride: ride,
-		};
-
-		for (category in categories) {
-			console.log(category);
-		}
-
-		return res.status(201).json(response);
+			review: review,
+		});
 	} catch (error) {
 		handleError(res, error);
 	}
@@ -188,7 +233,7 @@ async function remove(req, res) {
 			}
 
 			const response = {
-				message: "Avaliação excluída com sucesso."
+				message: "Avaliação excluída com sucesso.",
 			};
 
 			return await review.destroy().then(() => {
@@ -207,5 +252,5 @@ export default {
 	listByUser,
 	listByPlace,
 	add,
-	remove
+	remove,
 };

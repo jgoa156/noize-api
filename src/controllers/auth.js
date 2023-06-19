@@ -13,7 +13,7 @@ async function login(req, res) {
 		}
 
 		// Procurando
-		let user = await Users.findByPk(email);
+		let user = await Users.findOne({ where: { email: email } });
 
 		if (!user) {
 			return res.status(404).send({ message: "Usuário não encontrado" });
@@ -42,7 +42,7 @@ async function login(req, res) {
 			);
 
 			// Enviando
-			delete user.password;
+			user.password = undefined;
 			const response = {
 				message:
 					"Usuário autenticado com sucesso; credenciais válidas por 1 hora",
@@ -107,6 +107,7 @@ async function signUp(req, res) {
 		);
 
 		// Enviando
+		user.password = undefined;
 		const response = {
 			message: "Usuário criado com sucesso",
 			user: user,
@@ -205,7 +206,9 @@ async function confirmEmail(req, res) {
 		});
 
 		if (tokenObj) {
-			const user = await Users.findOne({ where: { email: tokenObj.userEmail } });
+			const user = await Users.findOne({
+				where: { email: tokenObj.userEmail },
+			});
 			const { email } = req.body;
 
 			return await tokenObj.destroy().then(async () => {

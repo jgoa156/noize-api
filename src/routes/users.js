@@ -9,7 +9,6 @@ const router = express.Router();
 router.get("/:userId/reviews", auth.verifyAuth, reviewsController.listByUser);
 
 // POST
-router.post("/:userId/review", auth.verifyAuth, reviewsController.add); // Add review
 router.post(
 	"/:id/email/sendLink",
 	auth.verifyAuth,

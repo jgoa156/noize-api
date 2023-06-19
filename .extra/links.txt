@@ -1,1 +1,0 @@
-https://www.izertis.com/en/-/refresh-token-with-jwt-authentication-in-node-js#:~:text=Access%20token%3A%20It%20contains%20all,generate%20a%20new%20access%20token.

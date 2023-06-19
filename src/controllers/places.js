@@ -1,11 +1,20 @@
 import { handleError } from "../utils";
-import { Rides, RidePassengers, Users, UserVehicles } from "../models";
+import { Users, Places, OpeningHours } from "../models";
 import { Op, fn, col } from "sequelize/dist";
 
 async function list(req, res) {
 	try {
 		let options = {
 			order: [["updatedAt", "DESC"]],
+			include: [
+				{
+					model: OpeningHours,
+					as: "openingHours",
+					attributes: {
+						exclude: ["id", "placeId", "createdAt", "updatedAt"],
+					},
+				},
+			],
 		};
 
 		const { id } = req.params;
@@ -14,7 +23,7 @@ async function list(req, res) {
 			const place = await Places.findByPk(id, options);
 
 			if (place) {
-				return res.send(ride);
+				return res.send(place);
 			}
 
 			return res.status(404).json({ message: "Lugar não encontrado" });
@@ -34,7 +43,7 @@ async function list(req, res) {
 				options = { ...options, offset: parseInt(offset) };
 			}
 
-			return res.send(await Rides.findAll(options));
+			return res.send(await Places.findAll(options));
 		}
 	} catch (error) {
 		handleError(res, error);
@@ -43,8 +52,10 @@ async function list(req, res) {
 
 async function listByProximity(req, res) {
 	try {
+		const { lat, lng } = req.query;
+
 		let options = {
-			order: [["updatedAt", "DESC"]]
+			order: [["updatedAt", "DESC"]],
 		};
 
 		return res.send(await Places.findAll(options));
@@ -55,25 +66,29 @@ async function listByProximity(req, res) {
 
 async function add(req, res) {
 	try {
-		const { userId } = req.body;
-
-		if (req.decodedToken.user != userId) {
-			return res.status(403).json({ message: "Acesso negado." });
-		}
-		if (!(await Users.findByPk(userId))) {
-			return res.status(404).json({ message: "Usuário não existe." });
-		}
-		if ((await Rides.findAll({ where: { userId: userId, [Op.or]: [{ status: "A" }, { status: "P" }] } })).length > 0) {
-			return res.status(400).json({ message: "Usuário só pode ter um pedido ou solicitação de carona pendente por vez." });
+		const { name, openingHours } = req.body;
+		const _place = await Places.findOne({ where: { name: name } });
+		if (_place) {
+			return res.status(200).json({
+				message: "Lugar já registrado.",
+				place: _place,
+			});
 		}
 
-		const ride = await Rides.create({ ...req.body, userId: userId, status: "P" });
-		const response = {
-			message: "Carona registrada com sucesso.",
-			ride: ride,
-		};
+		const place = await Places.create({ ...req.body });
+		openingHours.forEach(async (openingHour, index) => {
+			await OpeningHours.create({
+				day: index,
+				placeId: place.id,
+				hourStart: openingHour.hourStart,
+				hourEnd: openingHour.hourEnd,
+			});
+		});
 
-		return res.status(201).json(response);
+		return res.status(201).json({
+			message: "Lugar adicionado com sucesso.",
+			place: place,
+		});
 	} catch (error) {
 		handleError(res, error);
 	}
@@ -82,5 +97,5 @@ async function add(req, res) {
 export default {
 	list,
 	listByProximity,
-	add
+	add,
 };

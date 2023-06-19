@@ -7,10 +7,12 @@ const router = express.Router();
 
 // GET
 router.get("/", auth.verifyAuth, placesController.list);
-router.get("/:placeId", auth.verifyAuth, placesController.list);
-router.get("/:placeId/reviews", auth.verifyAuth, reviewsController.listByPlace);
+router.get("/:id", auth.verifyAuth, placesController.list);
+router.get("/closest", auth.verifyAuth, placesController.listByProximity);
+router.get("/:id/reviews", auth.verifyAuth, reviewsController.listByPlace);
 
 // POST
 router.post("/", auth.verifyAuth, placesController.add);
+router.post("/:placeId/review", auth.verifyAuth, reviewsController.add);
 
 export default router;

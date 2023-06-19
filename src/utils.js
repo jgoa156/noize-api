@@ -28,8 +28,8 @@ export function handleError(res, error) {
 		error.parent && error.parent.sqlMessage
 			? error.parent.sqlMessage
 			: error.errors && error.errors[0].message
-				? error.errors[0].message
-				: error.message;
+			? error.errors[0].message
+			: error.message;
 
 	return res.status(code).json({ message: message });
 }
@@ -52,12 +52,15 @@ export function isVehiclePlate(plate) {
 }
 
 export function generateToken() {
-	const length = 10
-	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	const length = 10;
+	const characters =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-	let result = '';
+	let result = "";
 	for (let i = 0; i < length; i++) {
-		result += characters.charAt(Math.floor(Math.random() * characters.length));
+		result += characters.charAt(
+			Math.floor(Math.random() * characters.length)
+		);
 	}
 
 	return result;
@@ -95,22 +98,25 @@ export async function mail(to, subject, body) {
 			pass: "tpxafymdgjfzbkrh",
 		},
 		tls: {
-			rejectUnauthorized: false
-		}
+			rejectUnauthorized: false,
+		},
 	});
 
-	const info = await transporter.sendMail({
-		from: '"Ubá" <ubaicomp@gmail.com>',
-		to: to,
-		subject: subject,
-		text: "Teste",
-		html: body
-	}, (error, info) => {
-		if (error) {
-			return error;
+	const info = await transporter.sendMail(
+		{
+			from: '"Ubá" <ubaicomp@gmail.com>',
+			to: to,
+			subject: subject,
+			text: "Teste",
+			html: body,
+		},
+		(error, info) => {
+			if (error) {
+				return error;
+			}
+			return info;
 		}
-		return info;
-	});
+	);
 
 	return info;
 }
@@ -120,4 +126,12 @@ function groupBy(xs, key) {
 		(rv[x[key]] = rv[x[key]] || []).push(x);
 		return rv;
 	}, {});
-};
+}
+
+export function isLatitude(num) {
+	return isFinite(num) && Math.abs(num) <= 90;
+}
+
+export function isLongitude(num) {
+	return isFinite(num) && Math.abs(num) <= 180;
+}
