@@ -14,9 +14,15 @@ module.exports = (sequelize, DataTypes) => {
 				as: "place",
 			});
 
+			this.belongsToMany(models.Categories, {
+				through: models.ReviewTags,
+				as: "categories",
+				foreignKey: "reviewId",
+			});
+
 			this.belongsToMany(models.Tags, {
-				through: "ReviewTags",
-				as: "reviews",
+				through: models.ReviewTags,
+				as: "tags",
 				foreignKey: "reviewId",
 			});
 		}

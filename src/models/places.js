@@ -10,9 +10,20 @@ module.exports = (sequelize, DataTypes) => {
 				as: "reviews",
 			});
 
+			this.hasMany(models.PlaceImages, {
+				foreignKey: "placeId",
+				as: "images",
+			});
+
 			this.hasMany(models.OpeningHours, {
 				foreignKey: "placeId",
 				as: "openingHours",
+			});
+
+			this.belongsToMany(models.PlaceTypes, {
+				through: "PlaceTypes",
+				as: "placetypes",
+				foreignKey: "placeId",
 			});
 		}
 	}

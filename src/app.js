@@ -4,7 +4,6 @@ import express from "express";
 import routes from "./routes";
 import cors from "cors";
 import formidable from "express-formidable";
-
 const morgan = require("morgan");
 
 const app = express();
@@ -13,6 +12,12 @@ app.use(express.static("public"));
 app.use(morgan("combined"));
 app.use(cors());
 app.use(routes);
+
+const models = require("./models");
+models.sequelize.sync().then(result => {
+	app.listen(3000);
+}).catch(err => {
+});
 
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {

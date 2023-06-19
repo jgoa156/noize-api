@@ -5,8 +5,14 @@ module.exports = (sequelize, DataTypes) => {
 	class Categories extends Model {
 		static associate(models) {
 			this.belongsToMany(models.Tags, {
-				through: "CategoryTags",
+				through: models.ReviewTags,
 				as: "tags",
+				foreignKey: "categoryId",
+			});
+
+			this.belongsToMany(models.Reviews, {
+				through: models.ReviewTags,
+				as: "reviews",
 				foreignKey: "categoryId",
 			});
 		}

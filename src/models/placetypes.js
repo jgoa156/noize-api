@@ -2,23 +2,17 @@
 const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-	class Tags extends Model {
+	class PlaceTypes extends Model {
 		static associate(models) {
-			this.belongsToMany(models.Categories, {
-				through: models.ReviewTags,
-				as: "categories",
-				foreignKey: "tagId",
-			});
-
-			this.belongsToMany(models.Reviews, {
-				through: models.ReviewTags,
-				as: "reviews",
-				foreignKey: "tagId",
+			this.belongsToMany(models.Places, {
+				through: "PlaceTypes",
+				as: "places",
+				foreignKey: "placeTypeId",
 			});
 		}
 	}
 
-	Tags.init(
+	PlaceTypes.init(
 		{
 			id: {
 				allowNull: false,
@@ -37,8 +31,8 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		{
 			sequelize,
-			modelName: "Tags",
+			modelName: "PlaceTypes",
 		}
 	);
-	return Tags;
+	return PlaceTypes;
 };

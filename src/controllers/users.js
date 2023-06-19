@@ -5,6 +5,95 @@ import path from "path";
 import fs from "fs";
 import sharp from "sharp";
 
+async function list(req, res) {
+	try {
+		let options = {
+			order: [["updatedAt", "DESC"]],
+			attributes: {
+				exclude: ["password"]
+			}
+		};
+
+		const { reviews } = req.query;
+		if (reviews && Boolean(reviews).valueOf()) {
+			options = {
+				...options,
+				include: [
+					...options.include,
+					{
+						model: Reviews,
+						as: "reviews",
+						include: [
+							{
+								model: Places,
+								as: "place",
+								attributes: ["id", "name", "address", "lat", "lng"]
+							},
+							{
+								model: Categories,
+								as: "categories",
+								attributes: ["id", "name"],
+								through: {
+									attributes: []
+								},
+								include: [
+									{
+										model: Tags,
+										as: "tags",
+										attributes: ["id", "name"],
+										through: {
+											attributes: []
+										}
+									},
+								],
+							},
+						]
+					}
+				]
+			}
+		}
+
+		const { id } = req.params;
+		if (id) {
+			const user = await Users.findByPk(id, options);
+
+			if (user) {
+				return res.send(user);
+			}
+
+			return res.status(404).json({ message: "Usuário não encontrado" });
+		} else {
+			const { limit, offset, search } = req.query;
+
+			if (limit && parseInt(limit) !== NaN) {
+				if (offset && parseInt(offset) !== NaN) {
+					options = {
+						...options,
+						limit: [parseInt(offset), parseInt(limit)],
+					};
+				}
+				options = { ...options, limit: parseInt(limit) };
+			}
+			if (offset && parseInt(offset) !== NaN) {
+				options = { ...options, offset: parseInt(offset) };
+			}
+
+			// Search
+			if (search && search.length != 0) {
+				options = {
+					...options, where: {
+						name: { [Op.like]: `%${search}%` }
+					}
+				};
+			}
+
+			return res.send(await Users.findAll(options));
+		}
+	} catch (error) {
+		handleError(res, error);
+	}
+}
+
 async function updateName(req, res) {
 	try {
 		let options = {
@@ -76,8 +165,8 @@ async function updateProfilePicture(req, res) {
 				const currentProfileImagePath = `${path}${user.profileImage}`;
 				const newProfileImage = `${user.id}_${time}.jpg`;
 				const newProfileImageUrl = `${process.env.NODE_HOST}${process.env.PORT
-						? `:${process.env.PORT}/images/${newProfileImage}`
-						: ""
+					? `:${process.env.PORT}/images/${newProfileImage}`
+					: ""
 					}`;
 
 				// Convert, crop and compress new file
@@ -212,6 +301,7 @@ async function sendEmailLink(req, res) {
 }
 
 export default {
+	list,
 	updateName,
 	updateProfilePicture,
 	sendEmailLink,

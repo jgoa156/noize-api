@@ -1,48 +1,42 @@
 import { handleError } from "../utils";
-import { Reviews, Places, Users, Tags, Categories } from "../models";
+import { Reviews, Places, Users, Tags, Categories, ReviewTags } from "../models";
 import { Op, fn, col } from "sequelize/dist";
 
 async function list(req, res) {
 	try {
 		let options = {
+
 			include: [
 				{
 					model: Users,
 					as: "user",
-					attributes: {
-						exclude: ["password"],
-						include: [
-							[
-								fn(
-									"concat",
-									`${process.env.NODE_HOST}${
-										process.env.PORT
-											? `:${process.env.PORT}`
-											: ""
-									}/images/`,
-									col("passengers.user.profileImage")
-								),
-								"profileImageUrl",
-							],
-						],
-					},
+					attributes: ["id", "name", "email", [fn("concat", `${process.env.NODE_HOST}${process.env.PORT ? `:${process.env.PORT}` : ""}/images/`, col("user.profileImage")), "profileImageUrl"]]
 				},
 				{
 					model: Places,
 					as: "place",
+					attributes: ["id", "name", "address", "lat", "lng"]
 				},
 				{
-					model: Tags,
-					as: "tags",
+					model: Categories,
+					as: "categories",
+					attributes: ["id", "name"],
+					through: {
+						attributes: []
+					},
 					include: [
 						{
-							model: Categories,
-							as: "categories",
+							model: Tags,
+							as: "tags",
+							attributes: ["id", "name"],
+							through: {
+								attributes: [],
+							},
 						},
 					],
 				},
 			],
-			order: [["updatedAt", "DESC"]],
+			order: [["updatedAt", "DESC"]]
 		};
 
 		const { id } = req.params;
@@ -73,9 +67,7 @@ async function list(req, res) {
 			}
 
 			// Fetching and grouping categories
-			let reviews = Reviews.findAll(options);
-
-			return res.send(reviews);
+			return res.send(await Reviews.findAll(options));
 		}
 	} catch (error) {
 		handleError(res, error);
@@ -84,9 +76,9 @@ async function list(req, res) {
 
 async function listByUser(req, res) {
 	try {
-		const { userId } = req.params;
+		const { id } = req.params;
 
-		if (!(await Users.findByPk(userId))) {
+		if (!(await Users.findByPk(id))) {
 			return res.status(404).json({ message: "Usuário não existe." });
 		}
 
@@ -95,21 +87,30 @@ async function listByUser(req, res) {
 				{
 					model: Places,
 					as: "place",
+					attributes: ["id", "name", "address", "lat", "lng"]
 				},
 				{
-					model: Tags,
-					as: "tags",
+					model: Categories,
+					as: "categories",
+					attributes: ["id", "name"],
+					through: {
+						attributes: []
+					},
 					include: [
 						{
-							model: Categories,
-							as: "categories",
+							model: Tags,
+							as: "tags",
+							attributes: ["id", "name"],
+							through: {
+								attributes: []
+							}
 						},
 					],
 				},
 			],
 			order: [["updatedAt", "DESC"]],
 			where: {
-				userId: userId,
+				userId: id,
 			},
 		};
 
@@ -121,9 +122,9 @@ async function listByUser(req, res) {
 
 async function listByPlace(req, res) {
 	try {
-		const { placeId } = req.params;
+		const { id } = req.params;
 
-		if (!(await Places.findByPk(placeId))) {
+		if (!(await Places.findByPk(id))) {
 			return res.status(404).json({ message: "Lugar não existe." });
 		}
 
@@ -132,38 +133,30 @@ async function listByPlace(req, res) {
 				{
 					model: Users,
 					as: "user",
-					attributes: {
-						exclude: ["password"],
-						include: [
-							[
-								fn(
-									"concat",
-									`${process.env.NODE_HOST}${
-										process.env.PORT
-											? `:${process.env.PORT}`
-											: ""
-									}/images/`,
-									col("passengers.user.profileImage")
-								),
-								"profileImageUrl",
-							],
-						],
-					},
+					attributes: ["id", "name", "email"]
 				},
 				{
-					model: Tags,
-					as: "tags",
+					model: Categories,
+					as: "categories",
+					attributes: ["id", "name"],
+					through: {
+						attributes: []
+					},
 					include: [
 						{
-							model: Categories,
-							as: "categories",
+							model: Tags,
+							as: "tags",
+							attributes: ["id", "name"],
+							through: {
+								attributes: []
+							}
 						},
 					],
 				},
 			],
 			order: [["updatedAt", "DESC"]],
 			where: {
-				placeId: placeId,
+				placeId: id,
 			},
 		};
 
@@ -209,7 +202,11 @@ async function add(req, res) {
 					where: { name: tagName },
 				});
 
-				// Add link between review, category and tag
+				await ReviewTags.create({
+					reviewId: review.id,
+					categoryId: category.id,
+					tagId: tag.id
+				});
 			});
 		}
 

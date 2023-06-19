@@ -50,6 +50,10 @@ module.exports = (sequelize, DataTypes) => {
 				defaultValue: false,
 				type: DataTypes.BOOLEAN,
 			},
+			profileImage: {
+				type: DataTypes.STRING,
+				unique: true
+			}
 		},
 		{
 			sequelize,

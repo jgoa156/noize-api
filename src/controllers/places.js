@@ -1,5 +1,5 @@
 import { handleError } from "../utils";
-import { Users, Places, OpeningHours } from "../models";
+import { Users, Places, OpeningHours, Reviews, Categories, Tags, PlaceImages } from "../models";
 import { Op, fn, col } from "sequelize/dist";
 
 async function list(req, res) {
@@ -10,15 +10,56 @@ async function list(req, res) {
 				{
 					model: OpeningHours,
 					as: "openingHours",
-					attributes: {
-						exclude: ["id", "placeId", "createdAt", "updatedAt"],
-					},
+					attributes: ["day", "hourStart", "hourEnd"]
 				},
+				{
+					model: PlaceImages,
+					as: "images",
+					attributes: ["link"]
+				}
 			],
 		};
 
-		const { id } = req.params;
+		const { reviews } = req.query;
+		if (reviews && Boolean(reviews).valueOf()) {
+			options = {
+				...options,
+				include: [
+					...options.include,
+					{
+						model: Reviews,
+						as: "reviews",
+						include: [
+							{
+								model: Users,
+								as: "user",
+								attributes: ["id", "name", "email"]
+							},
+							{
+								model: Categories,
+								as: "categories",
+								attributes: ["id", "name"],
+								through: {
+									attributes: []
+								},
+								include: [
+									{
+										model: Tags,
+										as: "tags",
+										attributes: ["id", "name"],
+										through: {
+											attributes: []
+										}
+									},
+								],
+							},
+						]
+					}
+				]
+			}
+		}
 
+		const { id } = req.params;
 		if (id) {
 			const place = await Places.findByPk(id, options);
 
@@ -28,7 +69,7 @@ async function list(req, res) {
 
 			return res.status(404).json({ message: "Lugar não encontrado" });
 		} else {
-			const { limit, offset } = req.query;
+			const { limit, offset, search } = req.query;
 
 			if (limit && parseInt(limit) !== NaN) {
 				if (offset && parseInt(offset) !== NaN) {
@@ -41,6 +82,15 @@ async function list(req, res) {
 			}
 			if (offset && parseInt(offset) !== NaN) {
 				options = { ...options, offset: parseInt(offset) };
+			}
+
+			// Search
+			if (search && search.length != 0) {
+				options = {
+					...options, where: {
+						name: { [Op.like]: `%${search}%` }
+					}
+				};
 			}
 
 			return res.send(await Places.findAll(options));
@@ -66,10 +116,10 @@ async function listByProximity(req, res) {
 
 async function add(req, res) {
 	try {
-		const { name, openingHours } = req.body;
+		const { name, openingHours, images } = req.body;
 		const _place = await Places.findOne({ where: { name: name } });
 		if (_place) {
-			return res.status(200).json({
+			return res.status(202).json({
 				message: "Lugar já registrado.",
 				place: _place,
 			});
@@ -82,6 +132,13 @@ async function add(req, res) {
 				placeId: place.id,
 				hourStart: openingHour.hourStart,
 				hourEnd: openingHour.hourEnd,
+			});
+		});
+
+		images.forEach(async (link) => {
+			await PlaceImages.create({
+				link: link,
+				placeId: place.id
 			});
 		});
 
