@@ -83,11 +83,11 @@ async function signUp(req, res) {
 
 		// Email de confirmação
 		const tokenEmail = await generateAndCreateToken(user.id, "E");
-		const info = await mail(
+		/*const info = await mail(
 			user.email,
 			"Confirmação de email - Nova conta",
 			`${process.env.CLIENT_HOST}/conta/email?token=${tokenEmail}`
-		);
+		);*/
 
 		// Autenticando
 		const token = jwt.sign({ user: user.id }, process.env.SECRET, {
