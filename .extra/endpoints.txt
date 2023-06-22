@@ -1,0 +1,29 @@
+[Places]
+[DONE] Add place
+[DONE] List places
+List places by distance
+[DONE] List specific place (+ reviews (+ user))
+[DONE] Search place
+
+[Users]
+List users sort by liked reviews; [TODO]
+List specific user (+ reviews (+ place));
+[DONE] List reviews by user;
+[DONE] Search user
+
+[Reviews]
+[DONE] List reviews;
+[DONE] List specific review;
+[DONE] List reviews by place;
+[DONE] List recent reviews;
+[DONE] Add review
+Like review; [TODO]
+Delete review; [TODO]
+
+[Categories]
+[DONE] List categories
+
+[Tags]
+[DONE] Search tags by category
+[DONE] List tags by category
+[DONE] Insert tag into category
