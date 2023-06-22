@@ -13,6 +13,7 @@ router.get("/:id/reviews", auth.verifyAuth, reviewsController.listByPlace);
 
 // POST
 router.post("/", auth.verifyAuth, placesController.add);
+router.post("/batch", auth.verifyAuth, placesController.batchAdd);
 router.post("/:placeId/review", auth.verifyAuth, reviewsController.add);
 
 export default router;

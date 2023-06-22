@@ -1,11 +1,10 @@
 import { handleError } from "../utils";
 import { Reviews, Places, Users, Tags, Categories, ReviewTags } from "../models";
-import { Op, fn, col } from "sequelize/dist";
+import { Op, fn, col, literal } from "sequelize/dist";
 
 async function list(req, res) {
 	try {
 		let options = {
-
 			include: [
 				{
 					model: Users,
@@ -30,12 +29,15 @@ async function list(req, res) {
 							as: "tags",
 							attributes: ["id", "name"],
 							through: {
-								attributes: [],
+								attributes: []
 							},
 						},
 					],
 				},
 			],
+			where: {
+				"$categories.tags.ReviewTags.reviewId$": { [Op.col]: "Reviews.id" }
+			},
 			order: [["updatedAt", "DESC"]]
 		};
 
@@ -111,6 +113,7 @@ async function listByUser(req, res) {
 			order: [["updatedAt", "DESC"]],
 			where: {
 				userId: id,
+				"$categories.tags.ReviewTags.reviewId$": { [Op.col]: "Reviews.id" }
 			},
 		};
 
@@ -157,6 +160,7 @@ async function listByPlace(req, res) {
 			order: [["updatedAt", "DESC"]],
 			where: {
 				placeId: id,
+				"$categories.tags.ReviewTags.reviewId$": { [Op.col]: "Reviews.id" }
 			},
 		};
 

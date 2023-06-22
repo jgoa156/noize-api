@@ -55,7 +55,10 @@ async function list(req, res) {
 							},
 						]
 					}
-				]
+				],
+				where: {
+					"$reviews.categories.tags.ReviewTags.reviewId$": { [Op.col]: "Reviews.id" }
+				}
 			}
 		}
 
@@ -87,7 +90,9 @@ async function list(req, res) {
 			// Search
 			if (search && search.length != 0) {
 				options = {
-					...options, where: {
+					...options,
+					where: {
+						...options.where,
 						name: { [Op.like]: `%${search}%` }
 					}
 				};
@@ -151,8 +156,51 @@ async function add(req, res) {
 	}
 }
 
+async function batchAdd(req, res) {
+	try {
+		const { places } = req.body;
+
+		let count = 0;
+		async function _add(place) {
+			let { name, openingHours, images } = place;
+
+			if (!await Places.findOne({ where: { name: name } })) {
+				const _place = await Places.create({ ...place });
+				openingHours.forEach(async (openingHour, index) => {
+					await OpeningHours.create({
+						day: index,
+						placeId: _place.id,
+						hourStart: openingHour.hourStart,
+						hourEnd: openingHour.hourEnd,
+					});
+				});
+
+				images.forEach(async (link) => {
+					await PlaceImages.create({
+						link: link,
+						placeId: _place.id
+					});
+				});
+
+				count++;
+			}
+		}
+
+		for await (let place of places) {
+			await _add(place);
+		}
+
+		return res.status(201).json({
+			message: `${count} de ${places.length} lugares adicionados com sucesso`,
+		});
+	} catch (error) {
+		handleError(res, error);
+	}
+}
+
 export default {
 	list,
 	listByProximity,
 	add,
+	batchAdd
 };

@@ -6,6 +6,7 @@ import auth from "../auth";
 const router = express.Router();
 
 // GET
+router.get("/", auth.verifyAuth, usersController.list);
 router.get("/:id/reviews", auth.verifyAuth, reviewsController.listByUser);
 
 // POST

@@ -1,5 +1,5 @@
 import { handleError, generateAndCreateToken, mail } from "../utils";
-import { Users, Rides } from "../models";
+import { Users, Reviews, Categories, Tags, Places, ReviewTags } from "../models";
 import { Op } from "sequelize/dist";
 import path from "path";
 import fs from "fs";
@@ -19,7 +19,6 @@ async function list(req, res) {
 			options = {
 				...options,
 				include: [
-					...options.include,
 					{
 						model: Reviews,
 						as: "reviews",
@@ -42,14 +41,17 @@ async function list(req, res) {
 										as: "tags",
 										attributes: ["id", "name"],
 										through: {
-											attributes: []
+											attributes: [],
 										}
 									},
 								],
 							},
-						]
+						],
 					}
-				]
+				],
+				where: {
+					"$reviews.categories.tags.ReviewTags.reviewId$": { [Op.col]: "Reviews.id" }
+				}
 			}
 		}
 
@@ -81,7 +83,9 @@ async function list(req, res) {
 			// Search
 			if (search && search.length != 0) {
 				options = {
-					...options, where: {
+					...options,
+					where: {
+						...options.where,
 						name: { [Op.like]: `%${search}%` }
 					}
 				};
