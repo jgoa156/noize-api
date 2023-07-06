@@ -197,21 +197,22 @@ async function add(req, res) {
 
 		const { tags } = req.body;
 		for (const [categoryName, _tags] of Object.entries(tags)) {
-			let category = await Categories.findOne({
-				where: { name: categoryName },
-			});
-
-			_tags.forEach(async (tagName, index) => {
-				let [tag] = await Tags.findOrCreate({
-					where: { name: tagName },
+			if (_tags.length > 0) {
+				let category = await Categories.findOne({
+					where: { name: categoryName },
 				});
-
-				await ReviewTags.create({
-					reviewId: review.id,
-					categoryId: category.id,
-					tagId: tag.id
+				_tags.forEach(async (tagName, index) => {
+					let [tag] = await Tags.findOrCreate({
+						where: { name: tagName },
+					});
+	
+					await ReviewTags.create({
+						reviewId: review.id,
+						categoryId: category.id,
+						tagId: tag.id
+					});
 				});
-			});
+			}
 		}
 
 		return res.status(201).json({
